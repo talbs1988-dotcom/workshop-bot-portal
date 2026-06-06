@@ -1,4 +1,4 @@
-export type Phase = "landing" | "wizard" | "apikey" | "chat" | "done";
+export type Phase = "landing" | "wizard" | "done";
 
 export type Permission =
   | "manage-tasks"
@@ -15,7 +15,6 @@ export interface BotConfig {
   businessType: string;
   permissions: Permission[];
   customRules: string;
-  apiKey?: string;
 }
 
 export const initialConfig: BotConfig = {

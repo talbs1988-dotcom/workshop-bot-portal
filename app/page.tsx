@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import { PhaseShell } from "@/components/PhaseShell";
 import { Landing } from "@/components/Landing";
 import { PersonalityWizard } from "@/components/PersonalityWizard";
-import { ApiKeyStep } from "@/components/ApiKeyStep";
-import { ChatInterface } from "@/components/ChatInterface";
 import { DoneScreen } from "@/components/DoneScreen";
 import {
   initialConfig,
@@ -23,10 +21,8 @@ export default function Home() {
     const stored = loadConfig();
     if (stored) {
       setConfig(stored);
-      if (stored.apiKey && stored.botName) {
-        setPhase("chat");
-      } else if (stored.botName) {
-        setPhase("apikey");
+      if (stored.botName) {
+        setPhase("done");
       }
     }
     setHydrated(true);
@@ -55,29 +51,12 @@ export default function Home() {
             onBack={() => setPhase("landing")}
             onComplete={(c) => {
               updateConfig(c);
-              setPhase("apikey");
+              setPhase("done");
             }}
-          />
-        )}
-        {phase === "apikey" && (
-          <ApiKeyStep
-            onBack={() => setPhase("wizard")}
-            onComplete={(apiKey) => {
-              const next = { ...config, apiKey };
-              updateConfig(next);
-              setPhase("chat");
-            }}
-          />
-        )}
-        {phase === "chat" && (
-          <ChatInterface
-            config={config}
-            onBack={() => setPhase("apikey")}
-            onDone={() => setPhase("done")}
           />
         )}
         {phase === "done" && (
-          <DoneScreen config={config} onChat={() => setPhase("chat")} />
+          <DoneScreen config={config} onEdit={() => setPhase("wizard")} />
         )}
       </PhaseShell>
     </main>
