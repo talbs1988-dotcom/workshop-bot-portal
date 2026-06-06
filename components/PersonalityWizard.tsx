@@ -3,8 +3,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
-import { EmojiTile } from "@/components/ui/EmojiTile";
-import type { BotConfig } from "@/lib/state";
+import type { BotConfig, Permission } from "@/lib/state";
+import { cn } from "@/lib/cn";
 
 interface WizardProps {
   initial: BotConfig;
@@ -12,24 +12,48 @@ interface WizardProps {
   onBack: () => void;
 }
 
-const TONES: Array<{
-  value: BotConfig["tone"];
+const PERMISSION_LABELS: Array<{
+  value: Permission;
   emoji: string;
   label: string;
+  hint: string;
 }> = [
-  { value: "friendly", emoji: "💛", label: "חברית" },
-  { value: "professional", emoji: "🎩", label: "מקצועית" },
-  { value: "direct", emoji: "⚡", label: "ישירה" },
-];
-
-const FOCUSES: Array<{
-  value: BotConfig["focus"];
-  emoji: string;
-  label: string;
-}> = [
-  { value: "tasks", emoji: "✅", label: "משימות" },
-  { value: "reminders", emoji: "⏰", label: "תזכורות" },
-  { value: "conversation", emoji: "💭", label: "שיחה" },
+  {
+    value: "manage-tasks",
+    emoji: "✅",
+    label: "ניהול משימות",
+    hint: "להוסיף ולסמן משימות שלך",
+  },
+  {
+    value: "manage-calendar",
+    emoji: "📅",
+    label: "ניהול יומן",
+    hint: "ליצור פגישות, להזכיר אירועים",
+  },
+  {
+    value: "manage-leads",
+    emoji: "🎯",
+    label: "ניהול לידים",
+    hint: "להוסיף לקוחות חדשים, לעדכן סטטוסים",
+  },
+  {
+    value: "send-invoices",
+    emoji: "🧾",
+    label: "הוצאת חשבוניות",
+    hint: "להוציא הצעות מחיר וחשבוניות",
+  },
+  {
+    value: "reply-to-others",
+    emoji: "📨",
+    label: "מענה לאחרים",
+    hint: "לענות גם להודעות מאנשים אחרים",
+  },
+  {
+    value: "share-private-info",
+    emoji: "🔓",
+    label: "שיתוף מידע פרטי",
+    hint: "לשתף איתי פרטים על עסקאות, מצב פיננסי",
+  },
 ];
 
 export function PersonalityWizard({
@@ -42,75 +66,162 @@ export function PersonalityWizard({
   const canSubmit =
     config.botName.trim().length >= 2 && config.ownerName.trim().length >= 2;
 
+  function togglePermission(p: Permission) {
+    setConfig((prev) => ({
+      ...prev,
+      permissions: prev.permissions.includes(p)
+        ? prev.permissions.filter((x) => x !== p)
+        : [...prev.permissions, p],
+    }));
+  }
+
   return (
-    <div className="max-w-xl mx-auto px-6 py-12">
+    <div className="max-w-2xl mx-auto px-6 py-12">
       <div className="text-center mb-8">
         <div className="text-5xl mb-3">🪪</div>
         <h2 className="text-2xl md:text-3xl font-bold text-ink mb-1">
           בואי נכיר את הבוט שלך
         </h2>
-        <p className="text-smoke">3 שאלות מהירות</p>
+        <p className="text-smoke">קצת פרטים — בלי זה הוא לא יידע איפה להתחיל</p>
       </div>
 
       <Card className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-ink mb-2">
-            איך תקראי לבוט שלך?
-          </label>
-          <Input
-            placeholder="לדוגמה: מאיה, אלי, או כל שם שתבחרי"
-            value={config.botName}
-            onChange={(e) => setConfig({ ...config, botName: e.target.value })}
-            maxLength={20}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-ink mb-2">
+              👤 שם הבוט
+            </label>
+            <Input
+              placeholder="מאיה, אלי, או כל שם"
+              value={config.botName}
+              onChange={(e) =>
+                setConfig({ ...config, botName: e.target.value })
+              }
+              maxLength={20}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-ink mb-2">
+              💁‍♀️ השם שלך
+            </label>
+            <Input
+              placeholder="ככה הוא יקרא לך"
+              value={config.ownerName}
+              onChange={(e) =>
+                setConfig({ ...config, ownerName: e.target.value })
+              }
+              maxLength={20}
+            />
+          </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-ink mb-2">
-            איך הוא יקרא לך?
+            📱 מספר WhatsApp שלך
+            <span className="font-normal text-smoke mr-2 text-xs">
+              (לסדנה — נחבר אותו אז)
+            </span>
           </label>
           <Input
-            placeholder="השם שלך"
-            value={config.ownerName}
+            placeholder="0501234567"
+            value={config.whatsappPhone}
             onChange={(e) =>
-              setConfig({ ...config, ownerName: e.target.value })
+              setConfig({ ...config, whatsappPhone: e.target.value })
             }
-            maxLength={20}
+            type="tel"
+            dir="ltr"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-ink mb-2">
+            💼 מה העסק שלך עושה?
+            <span className="font-normal text-smoke mr-2 text-xs">
+              (משפט קצר)
+            </span>
+          </label>
+          <Input
+            placeholder="לדוגמה: יועצת שיווק לבעלי עסקים קטנים"
+            value={config.businessType}
+            onChange={(e) =>
+              setConfig({ ...config, businessType: e.target.value })
+            }
+            maxLength={120}
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-ink mb-3">
-            מה האופי שלו?
+            🛡️ מה מותר לבוט לעשות?
           </label>
-          <div className="grid grid-cols-3 gap-3">
-            {TONES.map((t) => (
-              <EmojiTile
-                key={t.value}
-                emoji={t.emoji}
-                label={t.label}
-                selected={config.tone === t.value}
-                onClick={() => setConfig({ ...config, tone: t.value })}
-              />
-            ))}
+          <div className="space-y-2">
+            {PERMISSION_LABELS.map((p) => {
+              const checked = config.permissions.includes(p.value);
+              return (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => togglePermission(p.value)}
+                  className={cn(
+                    "w-full flex items-start gap-3 p-3 rounded-xl border-2 text-right transition-all",
+                    "hover:bg-cream",
+                    checked
+                      ? "border-gold bg-peach/30"
+                      : "border-line bg-white",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5",
+                      checked
+                        ? "bg-ink text-cream"
+                        : "border-2 border-line bg-white",
+                    )}
+                  >
+                    {checked && (
+                      <svg
+                        className="w-4 h-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-ink text-sm">
+                      <span className="me-2">{p.emoji}</span>
+                      {p.label}
+                    </div>
+                    <div className="text-xs text-smoke">{p.hint}</div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-ink mb-3">
-            במה הוא יעזור בעיקר?
+          <label className="block text-sm font-medium text-ink mb-2">
+            📝 כללים נוספים שחשובים לך
+            <span className="font-normal text-smoke mr-2 text-xs">
+              (אופציונלי — לדוגמה: "אל תזכיר את ההכנסות אם אני לא שואלת")
+            </span>
           </label>
-          <div className="grid grid-cols-3 gap-3">
-            {FOCUSES.map((f) => (
-              <EmojiTile
-                key={f.value}
-                emoji={f.emoji}
-                label={f.label}
-                selected={config.focus === f.value}
-                onClick={() => setConfig({ ...config, focus: f.value })}
-              />
-            ))}
-          </div>
+          <textarea
+            className="w-full min-h-24 px-4 py-3 rounded-xl border border-line bg-white text-ink placeholder:text-smoke/60 focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold transition-shadow"
+            placeholder="כתבי כאן כל מה שאת רוצה שהבוט ידע..."
+            value={config.customRules}
+            onChange={(e) =>
+              setConfig({ ...config, customRules: e.target.value })
+            }
+            maxLength={500}
+          />
         </div>
       </Card>
 

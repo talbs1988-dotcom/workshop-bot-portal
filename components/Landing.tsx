@@ -35,7 +35,7 @@ export function Landing({ onStart }: LandingProps) {
       </Button>
 
       <div className="mt-12 grid grid-cols-3 gap-3 max-w-md mx-auto text-center">
-        <Step emoji="🪪" text="בחרי שם ואופי" />
+        <Step emoji="🪪" text="פרטי עסק וכללים" />
         <Step emoji="🔑" text="חברי Claude" />
         <Step emoji="💬" text="דברי איתו!" />
       </div>

@@ -1,18 +1,16 @@
-import type { BotConfig, Permission } from "./state";
+import type { BotConfig } from "./state";
 
 export interface ExportedConfig {
-  version: "1.1";
+  version: "1.0";
   generatedAt: string;
   bot: {
     name: string;
-    businessType: string;
+    tone: BotConfig["tone"];
+    focus: BotConfig["focus"];
   };
   owner: {
     name: string;
-    whatsappPhone: string;
   };
-  permissions: Permission[];
-  customRules: string;
   workshop: {
     nextStep: "connect-whatsapp-via-green-api";
     instructions: string;
@@ -21,18 +19,16 @@ export interface ExportedConfig {
 
 export function buildExport(config: BotConfig): ExportedConfig {
   return {
-    version: "1.1",
+    version: "1.0",
     generatedAt: new Date().toISOString(),
     bot: {
       name: config.botName,
-      businessType: config.businessType,
+      tone: config.tone,
+      focus: config.focus,
     },
     owner: {
       name: config.ownerName,
-      whatsappPhone: config.whatsappPhone,
     },
-    permissions: config.permissions,
-    customRules: config.customRules,
     workshop: {
       nextStep: "connect-whatsapp-via-green-api",
       instructions:
